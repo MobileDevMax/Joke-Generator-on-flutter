@@ -1,0 +1,81 @@
+import 'dart:convert';
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+
+void main() {
+  runApp(MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Joke Generator',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
+      home: JokeHomePage(),
+    );
+  }
+}
+
+class JokeHomePage extends StatefulWidget {
+  @override
+  _JokeHomePageState createState() => _JokeHomePageState();
+}
+
+class _JokeHomePageState extends State<JokeHomePage> {
+  String _joke = 'Press the button to get a joke!';
+  final JokeService _jokeService = JokeService();
+
+  void _getJoke() async {
+    String joke = await _jokeService.fetchJoke();
+    setState(() {
+      _joke = joke;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Joke Generator'),
+      ),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              Text(
+                _joke,
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 24),
+              ),
+              SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: _getJoke,
+                child: Text('Get a Joke'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class JokeService {
+  final String apiUrl = 'https://official-joke-api.appspot.com/random_joke';
+
+  Future<String> fetchJoke() async {
+    final response = await http.get(Uri.parse(apiUrl));
+
+    if (response.statusCode == 200) {
+      final jokeData = json.decode(response.body);
+      return '${jokeData['setup']} - ${jokeData['punchline']}';
+    } else {
+      throw Exception('Failed to load joke');
+    }
+  }
+}
